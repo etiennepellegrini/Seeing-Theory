@@ -28,7 +28,10 @@
 
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {
-            navigator.serviceWorker.register('/sw.js').catch(function() { /* silent */ });
+            // Derive sw.js path relative to the site root (works on any subpath host)
+            var swUrl = new URL('../../sw.js', window.location.href).href;
+            navigator.serviceWorker.register(swUrl, { scope: new URL('../../', window.location.href).href })
+                .catch(function() { /* silent */ });
         });
     }
 }());
