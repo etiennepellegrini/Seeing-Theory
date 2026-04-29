@@ -1721,175 +1721,355 @@ body {
 
 
 /*==========================================================
-  MOBILE LAYOUT (≤749px)
-  Single-column: viz panel pinned at top, text scrolls below
+  CHAPTER FLOW (STEPPER) LAYOUT
+  Activated when JS adds `body.flow` class. One section is
+  visible at a time, navigated with prev/next buttons. Each
+  section bundles text (collapsible), plot, and controls.
 ==========================================================*/
 
-/* Collapse button — hidden on desktop */
+/* Collapse button hidden by default; flow shows it */
 .unit-collapse-btn {
     display: none;
 }
 
-@media screen and (max-width: 749px) {
+body.flow {
+    overflow-x: hidden;
+}
 
-    /* Compact full-width header */
-    .header {
-        width: 100%;
-        height: 4em;
-        z-index: 3000;
+/* Compact header */
+body.flow .header {
+    width: 100%;
+    height: 3.5em;
+    z-index: 3000;
+    background: white;
+    border-bottom: 1px solid #eee;
+}
+
+body.flow .header-wrapper {
+    margin: 0 auto;
+    padding: 0.5em 1em;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Right column hidden — JS moves its sections into the text sections */
+body.flow .col-right {
+    display: none;
+}
+
+/* Left column becomes the full-width content host.
+   Background-color is inherited from the chapter's own CSS
+   (e.g. #D6EFFA for basic-probability), which gives each chapter
+   its own theme color. */
+body.flow .col-left {
+    width: 100%;
+    margin: 3.5em 0 0 0;
+    padding: 0;
+    position: relative;
+    min-height: calc(100vh - 3.5em);
+}
+
+body.flow .col-left-wrapper {
+    width: 100%;
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 0;
+}
+
+/* Each section becomes a full-viewport card */
+body.flow #section0,
+body.flow #section1,
+body.flow #section2,
+body.flow #section3 {
+    display: none;
+    box-sizing: border-box;
+    width: 100%;
+    min-height: calc(100vh - 3.5em);
+    padding: 0.8em 1em 1em;
+    flex-direction: column;
+}
+
+body.flow #section0.flow-active,
+body.flow #section1.flow-active,
+body.flow #section2.flow-active,
+body.flow #section3.flow-active {
+    display: flex;
+    animation: flow-fade-in 0.22s ease-out;
+}
+
+@keyframes flow-fade-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Section dots: circular indicators at top of each section */
+body.flow .flow-dots {
+    display: flex;
+    justify-content: center;
+    gap: 0.5em;
+    padding: 0.3em 0 0.6em;
+}
+
+body.flow .flow-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #d4d4d4;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+    border: none;
+    padding: 0;
+}
+
+body.flow .flow-dot:hover {
+    background: #999;
+}
+
+body.flow .flow-dot.flow-dot-active {
+    background: #1d3557;
+    transform: scale(1.2);
+}
+
+/* The .unit fills the section */
+body.flow .unit {
+    padding-top: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+body.flow .unit h3 {
+    margin: 0.2em 0;
+    font-size: 1.4em;
+}
+
+/* Collapse button */
+body.flow .unit-collapse-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    background: transparent;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 0.4em 0.8em;
+    font-size: 0.75em;
+    color: #666;
+    cursor: pointer;
+    margin: 0.3em 0;
+    font-family: inherit;
+    align-self: flex-start;
+}
+
+body.flow .unit-collapse-btn:active {
+    background: #f0f0f0;
+}
+
+/* Collapsible text wrapper */
+body.flow .unit-text {
+    max-height: 45vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    transition: max-height 0.3s ease, opacity 0.2s ease;
+    margin-bottom: 0.5em;
+}
+
+body.flow .unit-text p,
+body.flow .unit-text span,
+body.flow .unit-text .MathJax_Display {
+    font-size: 0.95em;
+}
+
+body.flow .unit.unit-collapsed .unit-text {
+    max-height: 0;
+    opacity: 0;
+    margin-bottom: 0;
+    pointer-events: none;
+}
+
+/* Visualization section (moved here by JS) — fills remaining space */
+body.flow .visualization-section {
+    width: 100%;
+    flex: 1 1 auto;
+    min-height: 32vh;
+    position: relative !important;
+    visibility: visible !important;
+    top: auto !important;
+    left: auto !important;
+    height: auto !important;
+    margin: 0.4em 0;
+    visibility: visible !important;
+}
+
+body.flow .visualization-wrapper {
+    width: 100%;
+    height: 100%;
+    min-height: 32vh;
+    position: relative;
+    display: block;
+}
+
+/* When text is collapsed, plot expands */
+body.flow .unit.unit-collapsed .visualization-section {
+    min-height: 55vh;
+}
+
+/* Controls below plot */
+body.flow .interactive-wrapper {
+    padding: 0.4em 0;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+body.flow .button-1 {
+    min-height: 44px;
+    padding: 0.6em 1.1em;
+    font-size: 0.85em;
+    margin: 0.3em 0.2em;
+}
+
+/* Section navigation row at bottom */
+body.flow .flow-section-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.7em 0 0.3em;
+    margin-top: 0.5em;
+    border-top: 1px solid #eaeaea;
+    flex-shrink: 0;
+}
+
+body.flow .flow-nav-btn {
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 0.55em 1em;
+    font-size: 0.9em;
+    color: #333;
+    cursor: pointer;
+    font-family: inherit;
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3em;
+}
+
+body.flow .flow-nav-btn:active {
+    background: #f0f0f0;
+}
+
+body.flow .flow-nav-btn[disabled] {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+body.flow .flow-nav-btn-next {
+    background: #1d3557;
+    color: white;
+    border-color: #1d3557;
+}
+
+body.flow .flow-nav-btn-next:active {
+    background: #15263e;
+}
+
+body.flow .flow-section-counter {
+    font-size: 0.8em;
+    color: #999;
+    text-align: center;
+    flex: 1;
+}
+
+/* Intro section (#section0) — chapter title + tile-based section selector */
+body.flow #section0 .chapter-intro {
+    padding: 3vh 0 1vh;
+    text-align: center;
+}
+
+body.flow #section0 .scroll-down {
+    display: none;
+}
+
+/* Tile-style section selector list (built from .nav-section moved into #section0) */
+body.flow #section0 .nav-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.7em;
+    padding: 1em 0;
+    margin-top: 0;
+    overflow: visible;
+    visibility: visible;
+}
+
+body.flow #section0 .nav-unit-wrapper {
+    width: 100%;
+    text-align: left;
+    padding: 0.8em 1em;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 1em;
+    transition: transform 0.15s, box-shadow 0.15s;
+    margin: 0;
+}
+
+body.flow #section0 .nav-unit-wrapper:active {
+    transform: scale(0.98);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+body.flow #section0 .nav-unit-wrapper img {
+    width: 3.5em;
+    height: 3.5em;
+    flex-shrink: 0;
+}
+
+body.flow #section0 .nav-unit-title {
+    font-size: 1.05em;
+    font-weight: 500;
+    padding: 0;
+    display: inline-block;
+}
+
+/* Action buttons + next-chapter footer: hidden in flow mode
+   ("Next chapter" is reachable via the Done button on the last section.) */
+body.flow .action-buttons,
+body.flow .chapter-footer {
+    display: none;
+}
+
+/* Force visualization sections that lived in .col-right to behave inline */
+body.flow #section-1,
+body.flow #section-2,
+body.flow #section-3 {
+    position: relative !important;
+    visibility: visible !important;
+    top: auto !important;
+    left: auto !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 32vh;
+}
+
+/* Hide old progress bar */
+body.flow .progress-bar {
+    display: none;
+}
+
+/* Wider screens */
+@media (min-width: 1024px) {
+    body.flow .col-left-wrapper {
+        max-width: 900px;
     }
-
-    .header-wrapper {
-        margin: 0 auto;
-        padding: 0.6em 1em;
-        width: 100%;
-        box-sizing: border-box;
+    body.flow .unit h3 {
+        font-size: 1.7em;
     }
-
-    /* Visualization panel: full-width, fixed below header */
-    .col-right {
-        width: 100%;
-        position: fixed;
-        top: 4em;
-        left: 0;
-        height: 45vh;
-        z-index: 500;
-        background: white;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
-    }
-
-    /* Visualization sections fill the panel */
-    #section-1,
-    #section-2,
-    #section-3 {
-        width: 100%;
-        left: 0;
-        top: 4em;
-        height: 45vh;
-    }
-
-    .visualization-section {
-        width: 100%;
-        height: 45vh;
-    }
-
-    .visualization-wrapper {
-        width: 100%;
-        height: 45vh;
-    }
-
-    /* Nav tiles: horizontal scroll row */
-    .nav-section {
-        display: flex;
-        flex-direction: row;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        justify-content: flex-start;
-        margin-top: 0;
-        padding: 0.4em 0.5em;
-        gap: 0.5em;
-    }
-
-    .nav-section::-webkit-scrollbar {
-        display: none;
-    }
-
-    .nav-unit-wrapper {
-        flex-shrink: 0;
-        width: auto;
-        min-width: 6em;
-        margin: 0.3em;
-        padding: 0.5em 0.8em;
-        text-align: center;
-    }
-
-    .nav-unit-wrapper img {
-        height: 3.5em;
-        display: block;
-        margin: 0 auto 0.3em;
-    }
-
-    .nav-unit-title {
-        font-size: 11px;
-        display: block;
-        padding: 0;
-    }
-
-    /* Text column: full width, scrolls below header + viz panel */
-    .col-left {
-        width: 100%;
-        margin-top: calc(4em + 45vh);
-        position: relative;
-    }
-
-    .col-left-wrapper {
-        width: 92%;
-        margin: 0 auto;
-    }
-
-    /* Reduce unit spacing from desktop 40% */
-    .unit {
-        padding-top: 8%;
-    }
-
-    /* Chapter intro */
-    .chapter-intro {
-        padding-top: 10vh;
-        padding-bottom: 10vh;
-    }
-
-    /* Hide language selector in right-column area (use hamburger menu instead) */
-    .col-right > .language-setting {
-        display: none;
-    }
-
-    /* Touch-friendly buttons (Apple HIG minimum 44px) */
-    .button-1 {
-        min-height: 44px;
-        padding: 0.8em 1.2em;
-        font-size: 0.85em;
-        margin: 3% 2%;
-    }
-
-    /* More breathing room for interactive controls */
-    .interactive-wrapper {
-        padding: 4% 2%;
-    }
-
-    /* Progress bar spans full width */
-    .progress-bar {
-        width: 100%;
-    }
-
-    /* Collapse toggle button */
-    .unit-collapse-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.3em;
-        background: transparent;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        padding: 0.4em 0.8em;
-        font-size: 0.75em;
-        color: #666;
-        cursor: pointer;
-        margin: 0.5em 0 0.8em;
-        font-family: inherit;
-    }
-
-    .unit-collapse-btn:active {
-        background: #f5f5f5;
-    }
-
-    /* Action footer */
-    .action-buttons {
-        width: 92%;
-        margin-top: 10%;
-    }
-
-    /* Chapter footer */
-    .chapter-footer-wrapper {
-        padding: 8% 0;
+    body.flow .unit-text p {
+        font-size: 1em;
+        line-height: 1.5;
     }
 }
 

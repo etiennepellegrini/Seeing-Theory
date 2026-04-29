@@ -198,6 +198,9 @@ var chapterlist = new Array("bp", "cp", "pd", "fi", "bi", "ra");
 var chapter_list = new Array("basic-probability", "compound-probability", "probability-distributions", "frequentist-inference", "bayesian-inference", "regression-analysis");
 var shareUrl = window.location.href;
 
+// When flow mode is on, suppress the legacy scroll-driven section reveal logic.
+var flowScrollDisabled = false;
+
 window.onload = function() {
 
     scrollTo();
@@ -205,19 +208,19 @@ window.onload = function() {
     //onload animation
     $('body').fadeIn(1000);
 
-    scrollAndReavealOnLoad();
+    setupChapterFlow();
+
+    // Legacy scroll-driven layout is replaced by setupChapterFlow on chapter pages.
+    if (!flowScrollDisabled) {
+        scrollAndReavealOnLoad();
+        chapterBackgroundColorChange();
+    }
     modalTitleOnLoad();
-    chapterBackgroundColorChange();
     shareButtonToggle();
     inlineShare();
 
-    initMobileCollapsible();
-
-    // Trigger resize so D3 charts redraw at correct mobile dimensions
-    if (window.innerWidth < 750) {
-        setTimeout(function() { $(window).trigger('resize'); }, 150);
-    }
-
+    // Charts read container size on resize; trigger one after layout settles.
+    setTimeout(function() { $(window).trigger('resize'); }, 150);
 }
 
 
@@ -255,6 +258,8 @@ function modalTitleOnLoad() {
 
 
 $(window).scroll(function() {
+    if (flowScrollDisabled) return;
+
     ScrollProgressBar();
     chapterBackgroundColorChange();
 
@@ -542,7 +547,9 @@ $(window).resize(function() {
         displayCurrentClass();
     }
 
-    chapterBackgroundColorChange();
+    if (!flowScrollDisabled) {
+        chapterBackgroundColorChange();
+    }
 
 
 });
@@ -662,32 +669,192 @@ function inlineShare(){
 }
 
 
-function initMobileCollapsible() {
-    if (window.innerWidth >= 750) return;
+// =====================================================================
+// Chapter Flow (stepper layout)
+// One section visible at a time, navigated with prev/next buttons.
+// Each section bundles: text (collapsible) → plot → controls → nav.
+// =====================================================================
 
-    ['#section1', '#section2', '#section3'].forEach(function(sel) {
-        var section = $(sel);
-        var unit = section.find('.unit');
-        if (!unit.length) return;
+var FLOW_SECTION_COUNT = 4; // #section0 (intro) + 3 topic sections
 
+function setupChapterFlow() {
+    // Only activate on chapter pages
+    if (!$('#section1').length || !$('#section-1').length) return;
+
+    document.body.classList.add('flow');
+
+    // 1. Move the .nav-section (chapter tile selector) from .col-right into #section0
+    var navSection = $('.nav-section').first();
+    if (navSection.length) {
+        $('#section0').append(navSection);
+    }
+
+    // 2. Move each visualization section into its corresponding text section.
+    //    Final order inside each text section becomes:
+    //    h3 → [collapse btn] → .unit-text (text) → visualization → controls → nav
+    [1, 2, 3].forEach(function(i) {
+        var vizSection = $('#section-' + i);
+        var textSection = $('#section' + i);
+        if (!vizSection.length || !textSection.length) return;
+
+        var unit = textSection.find('.unit').first();
         var heading = unit.find('h3').first();
         if (!heading.length) return;
 
-        // Collect everything after the heading into a collapsible wrapper
-        heading.nextAll().wrapAll('<div class="unit-collapsible-content">');
+        // Split the children after the heading into "text" vs "controls".
+        // Controls = .interactive-wrapper or interactive bar charts placed
+        // in the text column (e.g. #barDie).
+        var children = heading.nextAll().toArray();
+        var textNodes = [];
+        var controlNodes = [];
 
-        var btn = $('<button class="unit-collapse-btn" aria-expanded="true">' +
-                    '<span class="unit-collapse-icon">&#x25B2;</span>' +
-                    '<span class="unit-collapse-text"> Hide explanation</span>' +
-                    '</button>');
+        children.forEach(function(el) {
+            var $el = $(el);
+            if ($el.is('.interactive-wrapper, #barDie, br, input, label')) {
+                controlNodes.push(el);
+            } else {
+                textNodes.push(el);
+            }
+        });
+
+        var textWrap = $('<div class="unit-text"></div>');
+        textWrap.append(textNodes);
+        heading.after(textWrap);
+
+        // Plot goes after text, controls go after plot.
+        vizSection.insertAfter(textWrap);
+        controlNodes.forEach(function(el) {
+            vizSection.after(el);
+        });
+    });
+
+    // 3. Add per-section UI: dots, collapse button (sections 1–3), nav bar.
+    for (var idx = 0; idx < FLOW_SECTION_COUNT; idx++) {
+        addFlowSectionUI(idx);
+    }
+
+    // 4. Override existing tile click handlers to use showSection instead of scrolling.
+    $('.nav-unit-wrapper#one').off('click').on('click', function() { showSection(1); });
+    $('.nav-unit-wrapper#two').off('click').on('click', function() { showSection(2); });
+    $('.nav-unit-wrapper#three').off('click').on('click', function() { showSection(3); });
+
+    // Modal sidebar: when on this chapter, tile clicks should jump to the section
+    // in flow mode rather than scroll.
+    $(document).on('click', '.nav-unit-wrapper-s', function(e) {
+        var current_page = $(this).parent().attr('class');
+        if (!current_page) return; // Different chapter — let original handler navigate.
+        if (!flowScrollDisabled) return;
+        e.stopImmediatePropagation();
+        var num = $(this).attr('class').slice(-1);
+        var n = parseInt(num, 10);
+        if (!isNaN(n)) {
+            closeNav();
+            showSection(n);
+        }
+    });
+
+    // 5. Determine initial section from URL hash (#section1 etc.) or default to 0.
+    var initial = 0;
+    var hash = (window.location.hash || '').replace('#', '');
+    var match = hash.match(/^section([0-3])$/);
+    if (match) initial = parseInt(match[1], 10);
+
+    showSection(initial);
+
+    // 6. Disable the old scroll-driven section reveal logic.
+    flowScrollDisabled = true;
+}
+
+function addFlowSectionUI(idx) {
+    var section = $('#section' + idx);
+    if (!section.length) return;
+
+    // Dots indicator at top
+    var dots = $('<div class="flow-dots" role="tablist"></div>');
+    for (var j = 0; j < FLOW_SECTION_COUNT; j++) {
+        var dot = $('<button type="button" class="flow-dot" aria-label="Go to section ' + j + '"></button>');
+        dot.attr('data-section', j);
+        if (j === idx) dot.addClass('flow-dot-active');
+        dots.append(dot);
+    }
+    dots.find('.flow-dot').on('click', function() {
+        showSection(parseInt($(this).attr('data-section'), 10));
+    });
+    section.prepend(dots);
+
+    // Collapse button for sections 1–3
+    if (idx >= 1 && idx <= 3) {
+        var unit = section.find('.unit').first();
+        var heading = unit.find('h3').first();
+
+        var btn = $(
+            '<button type="button" class="unit-collapse-btn" aria-expanded="true">' +
+                '<span class="unit-collapse-icon">▲</span>' +
+                '<span class="unit-collapse-text"> Hide explanation</span>' +
+            '</button>'
+        );
         heading.after(btn);
 
         btn.on('click', function() {
             var expanded = $(this).attr('aria-expanded') === 'true';
             $(this).attr('aria-expanded', String(!expanded));
-            $(this).find('.unit-collapse-icon').html(expanded ? '&#x25BC;' : '&#x25B2;');
+            $(this).find('.unit-collapse-icon').text(expanded ? '▼' : '▲');
             $(this).find('.unit-collapse-text').text(expanded ? ' Show explanation' : ' Hide explanation');
-            unit.find('.unit-collapsible-content').slideToggle(200);
+            unit.toggleClass('unit-collapsed');
+            // Let the CSS transition finish, then redraw plots at the new size.
+            setTimeout(function() { $(window).trigger('resize'); }, 320);
         });
+    }
+
+    // Bottom nav: prev / counter / next
+    var navBar = $('<div class="flow-section-nav"></div>');
+    var prevBtn = $('<button type="button" class="flow-nav-btn flow-nav-prev">← Previous</button>');
+    var counter = $('<div class="flow-section-counter">' + (idx + 1) + ' / ' + FLOW_SECTION_COUNT + '</div>');
+    var isLast = idx === FLOW_SECTION_COUNT - 1;
+    // On the last section, the next button links to the next chapter
+    // (reading the href from the existing .chapter-footer link).
+    var nextChapterHref = $('.chapter-footer').closest('a').attr('href');
+    var nextLabel = isLast
+        ? (nextChapterHref ? 'Next chapter →' : 'Done')
+        : 'Next →';
+    var nextBtn = $('<button type="button" class="flow-nav-btn flow-nav-btn-next">' + nextLabel + '</button>');
+
+    if (idx === 0) prevBtn.attr('disabled', 'disabled');
+
+    prevBtn.on('click', function() { showSection(idx - 1); });
+    nextBtn.on('click', function() {
+        if (!isLast) {
+            showSection(idx + 1);
+        } else if (nextChapterHref) {
+            window.location.href = nextChapterHref;
+        }
     });
+
+    navBar.append(prevBtn).append(counter).append(nextBtn);
+    section.append(navBar);
+}
+
+function showSection(idx) {
+    if (idx < 0 || idx >= FLOW_SECTION_COUNT) return;
+
+    $('.flow-active').removeClass('flow-active');
+    $('#section' + idx).addClass('flow-active');
+
+    $('.flow-dot').removeClass('flow-dot-active');
+    $('#section' + idx + ' .flow-dot[data-section="' + idx + '"]').addClass('flow-dot-active');
+    // Keep all sections' dot rows in sync (each section has its own dot row)
+    $('.flow-dots .flow-dot').each(function() {
+        var i = parseInt($(this).attr('data-section'), 10);
+        if (i === idx) $(this).addClass('flow-dot-active');
+        else $(this).removeClass('flow-dot-active');
+    });
+
+    // Update URL hash without scrolling
+    if (history.replaceState) {
+        history.replaceState(null, '', idx === 0 ? location.pathname + location.search : '#section' + idx);
+    }
+
+    window.scrollTo(0, 0);
+    // Let the new section render, then redraw D3 charts.
+    setTimeout(function() { $(window).trigger('resize'); }, 60);
 }

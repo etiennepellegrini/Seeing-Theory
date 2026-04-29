@@ -12,18 +12,26 @@ $( window ).load(function() {
 //*******************************************************************************//
 function estimation() {
 	var container = d3.select("#estSvg").node();
-	var side = Math.min(container.clientWidth || 500, container.clientHeight || 500);
 	var m = 0,
 		n = 0,
-		width = side,
-		height = side;
+		width = 500,
+		height = 500;
 
-	var chart = d3.select("#estSvg")
-	       .append("canvas")
-	       .attr("width", width)
-	       .attr("height", height);
-
+	var chart = d3.select("#estSvg").append("canvas");
 	var context = chart.node().getContext("2d");
+
+	function resizeCanvas() {
+	  var side = Math.min(container.clientWidth || 500, container.clientHeight || 500);
+	  width = side;
+	  height = side;
+	  chart.attr("width", width).attr("height", height);
+	  // Resizing clears the canvas — reset counters and redraw the frame.
+	  m = 0; n = 0;
+	  $("#m").html(m);
+	  $("#n").html(n);
+	  $("#pi").html(round(0, 4));
+	  drawCanvas();
+	}
 
 	function drawCanvas() {
 	  context.strokeStyle = "#DDD";
@@ -37,7 +45,8 @@ function estimation() {
 	  context.closePath();
 	}
 
-	drawCanvas();
+	resizeCanvas();
+	$(window).on("resize", resizeCanvas);
 
 	function drawCircle(){
 	 var x = Math.random()*width;
