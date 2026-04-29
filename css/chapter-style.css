@@ -1719,3 +1719,177 @@ body {
   stroke-width: 1px;
 }
 
+
+/*==========================================================
+  MOBILE LAYOUT (≤749px)
+  Single-column: viz panel pinned at top, text scrolls below
+==========================================================*/
+
+/* Collapse button — hidden on desktop */
+.unit-collapse-btn {
+    display: none;
+}
+
+@media screen and (max-width: 749px) {
+
+    /* Compact full-width header */
+    .header {
+        width: 100%;
+        height: 4em;
+        z-index: 3000;
+    }
+
+    .header-wrapper {
+        margin: 0 auto;
+        padding: 0.6em 1em;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    /* Visualization panel: full-width, fixed below header */
+    .col-right {
+        width: 100%;
+        position: fixed;
+        top: 4em;
+        left: 0;
+        height: 45vh;
+        z-index: 500;
+        background: white;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    }
+
+    /* Visualization sections fill the panel */
+    #section-1,
+    #section-2,
+    #section-3 {
+        width: 100%;
+        left: 0;
+        top: 4em;
+        height: 45vh;
+    }
+
+    .visualization-section {
+        width: 100%;
+        height: 45vh;
+    }
+
+    .visualization-wrapper {
+        width: 100%;
+        height: 45vh;
+    }
+
+    /* Nav tiles: horizontal scroll row */
+    .nav-section {
+        display: flex;
+        flex-direction: row;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        justify-content: flex-start;
+        margin-top: 0;
+        padding: 0.4em 0.5em;
+        gap: 0.5em;
+    }
+
+    .nav-section::-webkit-scrollbar {
+        display: none;
+    }
+
+    .nav-unit-wrapper {
+        flex-shrink: 0;
+        width: auto;
+        min-width: 6em;
+        margin: 0.3em;
+        padding: 0.5em 0.8em;
+        text-align: center;
+    }
+
+    .nav-unit-wrapper img {
+        height: 3.5em;
+        display: block;
+        margin: 0 auto 0.3em;
+    }
+
+    .nav-unit-title {
+        font-size: 11px;
+        display: block;
+        padding: 0;
+    }
+
+    /* Text column: full width, scrolls below header + viz panel */
+    .col-left {
+        width: 100%;
+        margin-top: calc(4em + 45vh);
+        position: relative;
+    }
+
+    .col-left-wrapper {
+        width: 92%;
+        margin: 0 auto;
+    }
+
+    /* Reduce unit spacing from desktop 40% */
+    .unit {
+        padding-top: 8%;
+    }
+
+    /* Chapter intro */
+    .chapter-intro {
+        padding-top: 10vh;
+        padding-bottom: 10vh;
+    }
+
+    /* Hide language selector in right-column area (use hamburger menu instead) */
+    .col-right > .language-setting {
+        display: none;
+    }
+
+    /* Touch-friendly buttons (Apple HIG minimum 44px) */
+    .button-1 {
+        min-height: 44px;
+        padding: 0.8em 1.2em;
+        font-size: 0.85em;
+        margin: 3% 2%;
+    }
+
+    /* More breathing room for interactive controls */
+    .interactive-wrapper {
+        padding: 4% 2%;
+    }
+
+    /* Progress bar spans full width */
+    .progress-bar {
+        width: 100%;
+    }
+
+    /* Collapse toggle button */
+    .unit-collapse-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3em;
+        background: transparent;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 0.4em 0.8em;
+        font-size: 0.75em;
+        color: #666;
+        cursor: pointer;
+        margin: 0.5em 0 0.8em;
+        font-family: inherit;
+    }
+
+    .unit-collapse-btn:active {
+        background: #f5f5f5;
+    }
+
+    /* Action footer */
+    .action-buttons {
+        width: 92%;
+        margin-top: 10%;
+    }
+
+    /* Chapter footer */
+    .chapter-footer-wrapper {
+        padding: 8% 0;
+    }
+}
+

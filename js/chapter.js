@@ -1,5 +1,38 @@
 //JS functions used in all pages
 
+// PWA: inject manifest + Apple meta tags, register service worker
+(function() {
+    var head = document.head;
+
+    var manifest = document.createElement('link');
+    manifest.rel = 'manifest';
+    manifest.href = '../manifest.json';
+    head.appendChild(manifest);
+
+    var appleMeta = [
+        ['apple-mobile-web-app-capable', 'yes'],
+        ['apple-mobile-web-app-status-bar-style', 'default'],
+        ['apple-mobile-web-app-title', 'Seeing Theory']
+    ];
+    appleMeta.forEach(function(pair) {
+        var m = document.createElement('meta');
+        m.name = pair[0];
+        m.content = pair[1];
+        head.appendChild(m);
+    });
+
+    var appleIcon = document.createElement('link');
+    appleIcon.rel = 'apple-touch-icon';
+    appleIcon.href = '../img/icons/icon-192.png';
+    head.appendChild(appleIcon);
+
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register('/sw.js').catch(function() { /* silent */ });
+        });
+    }
+}());
+
 //Adds bring to front for all elements from D3 selection
 //Adapted from the following code:
 //http://stackoverflow.com/questions/14167863/how-can-i-bring-a-circle-to-the-front-with-d3
@@ -175,8 +208,12 @@ window.onload = function() {
     shareButtonToggle();
     inlineShare();
 
+    initMobileCollapsible();
 
-
+    // Trigger resize so D3 charts redraw at correct mobile dimensions
+    if (window.innerWidth < 750) {
+        setTimeout(function() { $(window).trigger('resize'); }, 150);
+    }
 
 }
 
@@ -619,8 +656,35 @@ function inlineShare(){
         $("#share").css({top: top_pos, left: left_pos, position:'absolute'});
     })
 
-    
 }
 
 
+function initMobileCollapsible() {
+    if (window.innerWidth >= 750) return;
 
+    ['#section1', '#section2', '#section3'].forEach(function(sel) {
+        var section = $(sel);
+        var unit = section.find('.unit');
+        if (!unit.length) return;
+
+        var heading = unit.find('h3').first();
+        if (!heading.length) return;
+
+        // Collect everything after the heading into a collapsible wrapper
+        heading.nextAll().wrapAll('<div class="unit-collapsible-content">');
+
+        var btn = $('<button class="unit-collapse-btn" aria-expanded="true">' +
+                    '<span class="unit-collapse-icon">&#x25B2;</span>' +
+                    '<span class="unit-collapse-text"> Hide explanation</span>' +
+                    '</button>');
+        heading.after(btn);
+
+        btn.on('click', function() {
+            var expanded = $(this).attr('aria-expanded') === 'true';
+            $(this).attr('aria-expanded', String(!expanded));
+            $(this).find('.unit-collapse-icon').html(expanded ? '&#x25BC;' : '&#x25B2;');
+            $(this).find('.unit-collapse-text').text(expanded ? ' Show explanation' : ' Hide explanation');
+            unit.find('.unit-collapsible-content').slideToggle(200);
+        });
+    });
+}

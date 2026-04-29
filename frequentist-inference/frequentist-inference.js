@@ -11,10 +11,12 @@ $( window ).load(function() {
 //Estimator
 //*******************************************************************************//
 function estimation() {
+	var container = d3.select("#estSvg").node();
+	var side = Math.min(container.clientWidth || 500, container.clientHeight || 500);
 	var m = 0,
 		n = 0,
-		width = 500,
-		height = 500;
+		width = side,
+		height = side;
 
 	var chart = d3.select("#estSvg")
 	       .append("canvas")
