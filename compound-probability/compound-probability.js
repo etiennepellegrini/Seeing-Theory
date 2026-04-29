@@ -142,7 +142,7 @@ function set() {
   //Draws SVG and updates based on width of page
   function drawSet() {
     var w = d3.select('#svgSet').node().clientWidth;
-    var h = 550;
+    var h = d3.select('#svgSet').node().clientHeight || 550;
     var padding = 15;
     var size = Math.min(w*0.8,h);
 
@@ -1010,7 +1010,7 @@ function conditional() {
   function drawCP() {
     var w = d3.select('#svgBallCP').node().clientWidth;
     var wProb = d3.select('#svgProbCP').node().clientWidth;
-    var h = 500;
+    var h = d3.select('#svgBallCP').node().clientHeight || 500;
     var hProb = 200;
     var padding = 25;
 

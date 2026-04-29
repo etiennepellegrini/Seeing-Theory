@@ -163,7 +163,7 @@ function chance() {
 	//Update SVG based on width of container
 	function drawCoin(){
 	    var width = d3.select('#barCoin').node().clientWidth;
-	    var height = 550;
+	    var height = d3.select('#barCoin').node().clientHeight || 550;
 	    var padCoin = 100;
 
 	    //Update SVG
@@ -442,7 +442,7 @@ function expectation() {
 
 		//Constants Expectation Die
 	    var w = d3.select('#plotDie').node().clientWidth;
-	    var h = 550;
+	    var h = d3.select('#plotDie').node().clientHeight || 550;
 	    var padExp = 35;
 
 	    //Update SVG

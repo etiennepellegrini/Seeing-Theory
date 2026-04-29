@@ -226,7 +226,7 @@ function ols() {
     // constants
     var parent = d3.select('#svg_ols'),
         w = parent.node().clientWidth,
-        h = 500,
+        h = parent.node().clientHeight || 500,
         padding = 50;
 
     //Update Scale Range
@@ -597,7 +597,7 @@ function correlation() {
     // constants
     var parent = d3.select('#svgCorr'),
         w = parent.node().clientWidth,
-        h = 500,
+        h = parent.node().clientHeight || 500,
         hBar = 70,
         padding = 50;
 
@@ -851,7 +851,7 @@ function anova() {
   function draw_anova() {
     var parent = d3.select('#svg_anova'),
         w = parent.node().clientWidth,
-        h = 400,
+        h = parent.node().clientHeight || 400,
         p = 40;
 
     //Update Scale Range

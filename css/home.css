@@ -750,6 +750,51 @@ ul.menu-sub{
 }
 
 
+/*==========================================================
+  HOME PAGE MOBILE POLISH (≤749px)
+==========================================================*/
+
+@media screen and (max-width: 749px) {
+
+    h1 {
+        font-size: 1.8em;
+    }
+
+    h3 {
+        font-size: 22px;
+    }
+
+    h4 {
+        font-size: 14px;
+    }
+
+    p {
+        font-size: 14px;
+    }
+
+    /* Chapter tile buttons: larger tap area */
+    .rec_button {
+        padding: 3% 6%;
+        font-size: 14px;
+    }
+
+    /* Round action buttons */
+    .round-button,
+    .round-button-x {
+        padding: 4% 10%;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Team / award images scale down */
+    .award {
+        height: 24px;
+    }
+}
+
+
 .language-setting select {
 	padding-right: 20px;
 	color: white;
